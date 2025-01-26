@@ -6,3 +6,26 @@
 //
 
 import Foundation
+
+
+class NewTaskViewModel: ObservableObject {
+    @Published var title: String = ""
+    @Published var time: String = ""
+    @Published var description: String = ""
+
+    let onAddTask: (TaskItem) -> Void
+
+    init(onAddTask: @escaping (TaskItem) -> Void) {
+        self.onAddTask = onAddTask
+    }
+
+    func addTask() {
+        let newTask = TaskItem(
+            title: title,
+            time: time,
+            isCompleted: false,
+            description: description.isEmpty ? nil : description
+        )
+        onAddTask(newTask)
+    }
+}

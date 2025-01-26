@@ -8,10 +8,15 @@ import SwiftUI
 
 
 struct TaskView: View {
+    
+    
+    @StateObject private var viewModel = TaskViewModel()
     @State private var tasks: [TaskItem] = [
         TaskItem(title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false),
         TaskItem(title: "Task 1", time: "Mon 8:45am", isCompleted: true)
     ]
+    
+    
     @State private var showingTaskDetails = false
     @State private var showingNewTaskSheet = false
     @State private var selectedTask: TaskItem?
