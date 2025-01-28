@@ -3,15 +3,11 @@
 //  TaskApp-FE
 //
 //  Created by Ibrahim Arogundade on 1/26/25.
-//
-
-import Foundation
-
 
 import Foundation
 
 struct APIEndpoints {
-    static let baseURL = "https://api.example.com" // Replace with your actual base URL
+    static let baseURL = "https://cf8b-184-104-233-33.ngrok-free.app" // Replace with your actual base URL
     
     struct Tasks {
         static let fetch = "\(baseURL)/tasks"
