@@ -8,7 +8,7 @@
 import Foundation
 
 
-class NewTaskViewModel: ObservableObject {
+class AddTaskViewModel: ObservableObject {
     @Published var title: String = ""
     @Published var time: String = ""
     @Published var description: String = ""
