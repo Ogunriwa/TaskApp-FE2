@@ -1,30 +1,9 @@
-//
-//  AuthViewModel.swift
-//  TaskApp-FE
-//
-//  Created by Ibrahim Arogundade on 2/1/25.
-//
-
 import Foundation
-
-struct AuthCredentials: Codable {
-    let email: String
-    let password: String
-}
-
-struct AuthResponse: Codable {
-    let token: String
-    let user: AuthUser
-}
-
-struct AuthUser: Codable {
-    let id: UUID
-    let email: String
-}
-
+import SwiftUI
 
 @MainActor
 class AuthViewModel: ObservableObject {
+    @Published var currentUser: UserDTO.Public?
     @Published var isAuthenticated = false
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -33,17 +12,44 @@ class AuthViewModel: ObservableObject {
     
     init(httpClient: HTTPClient = HTTPClient()) {
         self.httpClient = httpClient
+        checkAuthenticationState()
     }
     
-    func signIn(email: String, password: String) {
+    private func checkAuthenticationState() {
+        if TokenManager.getToken() != nil {
+            Task {
+                await fetchCurrentUser()
+            }
+        }
+    }
+    
+    func signUp(username: String, email: String, password: String, confirmPassword: String) async {
         isLoading = true
         errorMessage = nil
         
         Task {
             do {
-                let credentials = AuthCredentials(email: email, password: password)
-                let response = try await httpClient.signIn(credentials)
-                // Save token and update authentication state
+                let credentials = SignUpCredentials(username: username, email: email, password: password, confirmPassword: confirmPassword)
+                currentUser = try await httpClient.signUp(credentials: credentials)
+                // Note: We don't set isAuthenticated here because the backend doesn't return a token on sign-up
+                isLoading = false
+            } catch {
+                isLoading = false
+                errorMessage = handleError(error)
+            }
+        }
+    }
+    
+    func signIn(email: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let credentials = LoginCredentials(email: email, password: password)
+                let token = try await httpClient.signIn(credentials: credentials)
+                TokenManager.saveToken(token.value)
+                await fetchCurrentUser()
                 isAuthenticated = true
                 isLoading = false
             } catch {
@@ -53,21 +59,32 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func signUp(email: String, password: String) {
+    func signOut() async {
         isLoading = true
         errorMessage = nil
         
         Task {
             do {
-                let credentials = AuthCredentials(email: email, password: password)
-                let response = try await httpClient.signUp(credentials)
-                // Save token and update authentication state
-                isAuthenticated = true
+                try await httpClient.signOut()
+                TokenManager.deleteToken()
+                currentUser = nil
+                isAuthenticated = false
                 isLoading = false
             } catch {
                 isLoading = false
                 errorMessage = handleError(error)
             }
+        }
+    }
+    
+    private func fetchCurrentUser() async {
+        do {
+            currentUser = try await httpClient.getCurrentUser()
+            isAuthenticated = true
+        } catch {
+            TokenManager.deleteToken()
+            isAuthenticated = false
+            errorMessage = handleError(error)
         }
     }
     

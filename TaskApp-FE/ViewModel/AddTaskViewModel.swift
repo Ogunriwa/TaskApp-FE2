@@ -21,6 +21,7 @@ class AddTaskViewModel: ObservableObject {
 
     func addTask() {
         let newTask = TaskItem(
+            id: 45,
             title: title,
             time: time,
             isCompleted: false,

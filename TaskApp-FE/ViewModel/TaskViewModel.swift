@@ -22,8 +22,8 @@ class TaskViewModel: ObservableObject {
     init() {
         // Initialize with some sample tasks
         tasks = [
-            TaskItem(title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false, description: nil),
-            TaskItem(title: "Task 1", time: "Mon 8:45am", isCompleted: true, description: "Sample description")
+            TaskItem(id: 45,title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false, description: nil),
+            TaskItem(id: 45, title: "Task 1", time: "Mon 8:45am", isCompleted: true, description: "Sample description")
         ]
     }
 

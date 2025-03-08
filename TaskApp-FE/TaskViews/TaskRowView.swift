@@ -30,5 +30,5 @@ struct TaskRowView: View {
 }
 
 #Preview {
-    TaskRowView(task: TaskItem(title: "Task 1", time: "Mon 8:45am", isCompleted: false))
+    TaskRowView(task: TaskItem(id: 46, title: "Task 1", time: "Mon 8:45am", isCompleted: false))
 }

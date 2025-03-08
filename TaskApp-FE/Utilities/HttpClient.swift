@@ -31,6 +31,8 @@ class HTTPClient {
         self.jsonDecoder.dateDecodingStrategy = .iso8601
     }
     
+    // FETCH TASKS
+    
     func fetch() async throws -> [TaskItem] {
         let url = URL(string: APIEndpoints.Tasks.fetch)!
         let (data, response) = try await session.data(from: url)
@@ -50,7 +52,7 @@ class HTTPClient {
             throw HTTPError.decodingError
         }
     }
-    
+    // ADD OR CREATE TASK
     func create(_ task: TaskItem) async throws -> TaskItem {
         let url = URL(string: APIEndpoints.Tasks.create)!
         var request = URLRequest(url: url)
@@ -80,6 +82,8 @@ class HTTPClient {
             throw HTTPError.decodingError
         }
     }
+    
+    // EDIT TASKS
     
     func update(_ task: TaskItem) async throws -> TaskItem {
         let url = URL(string: APIEndpoints.Tasks.update(task.id))!
@@ -111,7 +115,9 @@ class HTTPClient {
         }
     }
     
-    func delete(_ id: UUID) async throws {
+    // DELETE TASKS
+    
+    func delete(_ id: Int64) async throws {
         let url = URL(string: APIEndpoints.Tasks.delete(id))!
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -131,69 +137,89 @@ class HTTPClient {
 
 // AUTHENTICATION
 extension HTTPClient {
-    func signIn(_ credentials: AuthCredentials) async throws -> AuthResponse {
-        guard let url = URL(string: APIEndpoints.Auth.login) else {
-            throw HTTPError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do {
+    func signUp(credentials: SignUpCredentials) async throws -> UserDTO.Public {
+            let url = URL(string: APIEndpoints.Auth.register)!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
             request.httpBody = try jsonEncoder.encode(credentials)
-        } catch {
-            throw HTTPError.encodingError
-        }
-        
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw HTTPError.networkError(URLError(.badServerResponse))
-        }
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw HTTPError.serverError(httpResponse.statusCode)
-        }
-        
-        do {
-            let authResponse = try jsonDecoder.decode(AuthResponse.self, from: data)
-            return authResponse
-        } catch {
-            throw HTTPError.decodingError
-        }
+            
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw HTTPError.networkError(URLError(.badServerResponse))
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw HTTPError.serverError(httpResponse.statusCode)
+            }
+            
+            return try jsonDecoder.decode(UserDTO.Public.self, from: data)
     }
     
-    func signUp(_ credentials: AuthCredentials) async throws -> AuthResponse {
-        guard let url = URL(string: APIEndpoints.Auth.register) else {
-            throw HTTPError.invalidURL
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do {
+    func signIn(credentials: LoginCredentials) async throws -> UserToken {
+            let url = URL(string: APIEndpoints.Auth.login)!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
             request.httpBody = try jsonEncoder.encode(credentials)
-        } catch {
-            throw HTTPError.encodingError
-        }
-        
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw HTTPError.networkError(URLError(.badServerResponse))
-        }
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw HTTPError.serverError(httpResponse.statusCode)
-        }
-        
-        do {
-            let authResponse = try jsonDecoder.decode(AuthResponse.self, from: data)
-            return authResponse
-        } catch {
-            throw HTTPError.decodingError
-        }
+            
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw HTTPError.networkError(URLError(.badServerResponse))
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw HTTPError.serverError(httpResponse.statusCode)
+            }
+            
+            return try jsonDecoder.decode(UserToken.self, from: data)
     }
+    
+    func signOut() async throws {
+            let url = URL(string: APIEndpoints.Auth.logout)!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(TokenManager.getToken() ?? "")", forHTTPHeaderField: "Authorization")
+            
+            let (_, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw HTTPError.networkError(URLError(.badServerResponse))
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw HTTPError.serverError(httpResponse.statusCode)
+            }
+    }
+    
+    func getCurrentUser() async throws -> UserDTO.Public {
+            let url = URL(string: APIEndpoints.Auth.currentUser)!
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("Bearer \(TokenManager.getToken() ?? "")", forHTTPHeaderField: "Authorization")
+            
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw HTTPError.networkError(URLError(.badServerResponse))
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw HTTPError.serverError(httpResponse.statusCode)
+            }
+            
+            return try jsonDecoder.decode(UserDTO.Public.self, from: data)
+        }
+    
+    
+}
+
+
+extension HTTPClient {
+    
+    
 }

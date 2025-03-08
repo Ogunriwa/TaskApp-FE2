@@ -4,27 +4,28 @@
 //
 //  Created by Ibrahim Arogundade on 1/26/25.
 
+
+
 import Foundation
 
 struct APIEndpoints {
-    static let baseURL = "https://cf8b-184-104-233-33.ngrok-free.app" // Replace with your actual base URL
+    static let baseURL = "https://your-api-base-url.com" // Replace with your actual base URL
+    
+    struct Auth {
+        static let register = "\(baseURL)/signin"
+        static let login = "\(baseURL)/login"
+        static let logout = "\(baseURL)/logout"
+        static let currentUser = "\(baseURL)/user"
+    }
     
     struct Tasks {
         static let fetch = "\(baseURL)/tasks"
         static let create = "\(baseURL)/tasks"
-        static func update(_ id: UUID) -> String { "\(baseURL)/tasks/\(id)" }
-        static func delete(_ id: UUID) -> String { "\(baseURL)/tasks/\(id)" }
+        static func update(_ id: Int64) -> String { "\(baseURL)/tasks/\(id)" }
+        static func delete(_ id: Int64) -> String { "\(baseURL)/tasks/\(id)" }
     }
-    
-    struct Auth {
-        static let login = "\(baseURL)/auth/login"
-        static let register = "\(baseURL)/auth/register"
-        static let refreshToken = "\(baseURL)/auth/refresh"
-        static let logout = "\(baseURL)/auth/logout"
-    }
-    
     struct User {
-        static let profile = "\(baseURL)/user/profile"
-        static func updateProfile(_ id: UUID) -> String { "\(baseURL)/user/\(id)" }
+        static let profile = "\(baseURL)/user"
+        static func updateProfile(_ id: Int64) -> String { "\(baseURL)/user/\(id)" }
     }
 }

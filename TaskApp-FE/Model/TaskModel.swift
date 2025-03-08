@@ -9,7 +9,7 @@ import Foundation
 
 
 struct TaskItem: Identifiable, Codable {
-    let id = UUID()
+    let id: Int64
     let title: String
     let time: String
     var isCompleted: Bool

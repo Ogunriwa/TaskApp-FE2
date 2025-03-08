@@ -44,6 +44,7 @@ struct AddTaskView: View {
             HStack {
                 Button(action: {
                     let newTask = TaskItem(
+                        id: 45,
                         title: title,
                         time: time,
                         isCompleted: false

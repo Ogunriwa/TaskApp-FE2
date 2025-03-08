@@ -41,6 +41,7 @@ struct TaskDetailSheet: View {
                     .frame(height: 1)
                     .foregroundColor(.black)
             }
+            .padding(.top, 30)
             
             // Description
             Text("Carry out the grocerie and mkekfwmriegnt cewfvgfrgettbbgbtbebetgbettbbbt rbegtbhhjySs")
@@ -80,6 +81,7 @@ struct TaskDetailSheet: View {
 #Preview {
     TaskDetailSheet(
         task: TaskItem(
+            id: 45,
             title: "Carry out groceries",
             time: "Mon 8:45am",
             isCompleted: false

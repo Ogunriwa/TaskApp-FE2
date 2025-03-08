@@ -12,8 +12,8 @@ struct TaskView: View {
     
     @StateObject private var viewModel = TaskViewModel()
     @State private var tasks: [TaskItem] = [
-        TaskItem(title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false),
-        TaskItem(title: "Task 1", time: "Mon 8:45am", isCompleted: true)
+        TaskItem(id: 45,title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false),
+        TaskItem(id: 45, title: "Task 1", time: "Mon 8:45am", isCompleted: true)
     ]
     
     
