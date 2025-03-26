@@ -33,9 +33,22 @@ class HTTPClient {
     
     // FETCH TASKS
     
+    func Authenticatedrequest(url: URL, method: String ) -> URLRequest {
+        
+        var request = URLRequest(url:url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token = TokenManager.getToken() {
+            request.setValue("Bearer\(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        return request
+    }
+    
     func fetch() async throws -> [TaskItem] {
         let url = URL(string: APIEndpoints.Tasks.fetch)!
-        let (data, response) = try await session.data(from: url)
+        let request = Authenticatedrequest(url: url, method: "GET")
+        let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw HTTPError.networkError(URLError(.badServerResponse))
@@ -55,9 +68,8 @@ class HTTPClient {
     // ADD OR CREATE TASK
     func create(_ task: TaskItem) async throws -> TaskItem {
         let url = URL(string: APIEndpoints.Tasks.create)!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var request = Authenticatedrequest(url: url, method: "POST")
+        
         
         do {
             request.httpBody = try jsonEncoder.encode(task)
@@ -84,12 +96,9 @@ class HTTPClient {
     }
     
     // EDIT TASKS
-    
     func update(_ task: TaskItem) async throws -> TaskItem {
         let url = URL(string: APIEndpoints.Tasks.update(task.id))!
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var request = Authenticatedrequest(url: url, method: "PUT")
         
         do {
             request.httpBody = try jsonEncoder.encode(task)
@@ -119,8 +128,7 @@ class HTTPClient {
     
     func delete(_ id: Int64) async throws {
         let url = URL(string: APIEndpoints.Tasks.delete(id))!
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
+        var request = Authenticatedrequest(url: url, method: "DELETE")
         
         let (_, response) = try await session.data(for: request)
         
@@ -137,6 +145,8 @@ class HTTPClient {
 
 // AUTHENTICATION
 extension HTTPClient {
+    
+    
     func signUp(credentials: SignUpCredentials) async throws -> UserDTO.Public {
             let url = URL(string: APIEndpoints.Auth.register)!
             var request = URLRequest(url: url)

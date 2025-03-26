@@ -4,54 +4,106 @@
 //
 //  Created by Ibrahim Arogundade on 1/26/25.
 //
-
 import Foundation
-
-
-
-
-import Foundation
-import Combine
+import SwiftUI
 
 class TaskViewModel: ObservableObject {
     @Published var tasks: [TaskItem] = []
-    @Published var selectedTaskIndex: Int?
-    @Published var showingTaskDetails = false
-    @Published var showingNewTaskSheet = false
-
-    init() {
-        // Initialize with some sample tasks
-        tasks = [
-            TaskItem(id: 45,title: "Carry out groceries", time: "Mon 8:45am", isCompleted: false, description: nil),
-            TaskItem(id: 45, title: "Task 1", time: "Mon 8:45am", isCompleted: true, description: "Sample description")
-        ]
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    
+    private let httpClient = HTTPClient()
+    
+    // Fetch all tasks
+    func fetchTasks() async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        do {
+            let fetchedTasks = try await httpClient.fetch()
+            await MainActor.run {
+                self.tasks = fetchedTasks
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to load tasks: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
     }
-
-    func addTask(_ task: TaskItem) {
-        tasks.append(task)
+    
+    // Add a new task
+    func addTask(_ task: TaskItem) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        do {
+            let newTask = try await httpClient.create(task)
+            await MainActor.run {
+                self.tasks.append(newTask)
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to add task: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
     }
-
-    func updateTask(at index: Int, with task: TaskItem) {
-        guard index >= 0 && index < tasks.count else { return }
-        tasks[index] = task
+    
+    // Update an existing task
+    func updateTask(_ task: TaskItem) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        do {
+            let updatedTask = try await httpClient.update(task)
+            await MainActor.run {
+                if let index = self.tasks.firstIndex(where: { $0.id == task.id }) {
+                    self.tasks[index] = updatedTask
+                }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to update task: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
     }
-
-    func deleteTask(at index: Int) {
-        guard index >= 0 && index < tasks.count else { return }
-        tasks.remove(at: index)
+    
+    // Delete a task
+    func deleteTask(id: Int64) async {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        do {
+            try await httpClient.delete(id)
+            await MainActor.run {
+                self.tasks.removeAll { $0.id == id }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to delete task: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
     }
-
-    func toggleTaskCompletion(at index: Int) {
-        guard index >= 0 && index < tasks.count else { return }
-        tasks[index].isCompleted.toggle()
-    }
-
-    func selectTask(at index: Int) {
-        selectedTaskIndex = index
-        showingTaskDetails = true
-    }
-
-    func showNewTaskSheet() {
-        showingNewTaskSheet = true
+    
+    // Toggle task completion status
+    func toggleTaskCompletion(_ task: TaskItem) async {
+        var updatedTask = task
+        updatedTask.isCompleted.toggle()
+        await updateTask(updatedTask)
     }
 }
